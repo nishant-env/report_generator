@@ -5,14 +5,14 @@ The metadata will be pushed to kafka topic, from which queued reports will be fe
 
 
 
-The configuration file should be in the following format: (name it ".conf.ini")
-[DATABASES]
-DB_CONNECTION_METASTORE=*Keep the sqlalchemy connection string here for metastore*
-DB_CONNECTION_DATASTORE=*Keep the sqlalchemy connection string here for datastore*
+The configuration file should be in the following format: (name it ".conf.ini") <br>
+[DATABASES]<br>
+DB_CONNECTION_METASTORE=*Keep the sqlalchemy connection string here for metastore* <br>
+DB_CONNECTION_DATASTORE=*Keep the sqlalchemy connection string here for datastore* <br>
 
 
-[MAIL_CONFIG]
-SMTP_HOST = 
-SMTP_PORT = 
-MAIL_FROM = 
+[MAIL_CONFIG] <br>
+SMTP_HOST = <br>
+SMTP_PORT = <br>
+MAIL_FROM = <br>
 MAIL_PASSWORD = *MAIL_APP_PASSWORD*

@@ -1,6 +1,6 @@
 from models import Reports, MailProperties
 from sqlalchemy import select
-from log_utils import logger
+from .log_utils import logger
 
 
 def get_active_reports(session, schedule_type, schedule):

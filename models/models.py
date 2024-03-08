@@ -1,9 +1,9 @@
 import enum
 
-
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import Column, Integer, String, Boolean, DateTime, Enum, SMALLINT, ForeignKey, UniqueConstraint
+from sqlalchemy import Column, Integer, String, Boolean, DateTime, Enum, SMALLINT, ForeignKey
 from sqlalchemy.dialects.mysql import LONGTEXT
+
 
 
 class ReportStatus(enum.Enum):
@@ -42,6 +42,17 @@ class MailProperties(Base):
     mail_bcc = Column(String(255))
     mail_subject = Column(String(255))
     mail_body = Column(LONGTEXT)
-    report_id = Column(Integer, ForeignKey(Reports.id), UniqueConstraint)
+    report_id = Column(Integer, ForeignKey(Reports.id), unique=True)
 
 
+## the below script runs only if it is run as main program, so to create the table, run this program first
+if __name__ == "__main__":
+    import sys
+    sys.path.append('..')
+    from sqlalchemy import create_engine
+    from config import db_connection
+
+
+    Base.metadata.create_all(bind=create_engine(db_connection('DB_CONNECTION_METASTORE'), echo=True))
+
+    

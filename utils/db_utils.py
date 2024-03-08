@@ -1,7 +1,11 @@
+from sqlalchemy import select, create_engine
 from models import Reports, MailProperties
-from sqlalchemy import select
 from .log_utils import logger
+from config import db_connection
 
+def get_metastore_engine():
+    engine = create_engine(db_connection('DB_CONNECTION_METASTORE'))
+    return engine
 
 def get_active_reports(session, schedule_type, schedule):
     try:

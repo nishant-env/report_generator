@@ -17,7 +17,7 @@ if __name__ == '__main__':
             ## playing with individual report here
 
             # creating json type object for pushing to kafka
-            report_key = str(report.report_id) + "_" + report.query_type
+            report_key = str(report.report_id) + "-" + report.query_type
             report_value = {
                     "report_name": report.report_name,
                     "sql_query": report.sql_query,

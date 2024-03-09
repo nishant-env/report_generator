@@ -12,7 +12,7 @@ def partitioner(key):
     ## assuming 3 partitions, for long running query, use a single partition, else a round robin partitioner on remaining 2
     available_partitions = [0,1]
     long_short = key.split('-')[-1]
-    if long_short == 'l':
+    if long_short.lower() == 'l':
         return 2
     else:
         return_partition = available_partitions[count]
@@ -46,7 +46,7 @@ def produced_callback(error, message):
 
 
 def send_report_to_queue(key, value):
-    producer.produce('test-topic', key=key, value=value, partition=partitioner(key), callback=produced_callback)
+    producer.produce('generate-report', key=key, value=value, partition=partitioner(key), callback=produced_callback)
     producer.poll(2)
 
 

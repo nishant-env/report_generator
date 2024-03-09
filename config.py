@@ -21,3 +21,7 @@ SMTP_HOST = config.get('MAIL_CONFIG', 'SMTP_HOST')
 SMTP_PORT = config.get('MAIL_CONFIG', 'SMTP_PORT')
 MAIL_FROM = config.get('MAIL_CONFIG', 'MAIL_FROM')
 MAIL_PASSWORD = config.get('MAIL_CONFIG', 'MAIL_PASSWORD')
+
+
+## file paths
+CSV_PATH = config.get('PATHS', 'CSV_GENERATION_PATH')

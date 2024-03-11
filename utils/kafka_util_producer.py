@@ -1,7 +1,8 @@
+from json import loads
 from confluent_kafka import Producer
 from sqlalchemy import update, func
 from .log_utils import logger
-from .db_utils import get_metastore_engine
+from .db_utils import update_last_scheduled
 from models import Reports
 
 
@@ -34,13 +35,11 @@ def produced_callback(error, message):
     else:
         logger.info(f'Sucessfully sent to queue for {message.key()}')
         ### setting the last scheduled time here 
-        set_query = update(
-            Reports
-        ).where(Reports.id == str(message.key().decode('utf-8')).strip('-')[0]).values(last_scheduled=func.now())
-        logger.debug(set_query)
-        engine = get_metastore_engine()
-        with engine.begin() as con:
-            con.execute(set_query)
+        update_last_scheduled(
+            report_id=message.key().decode('utf-8').split('-')[0],
+            report_name=loads(message.value().decode('utf-8'))['report_name']
+        )
+    
 
 
 

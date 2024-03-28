@@ -44,7 +44,7 @@ def get_active_reports(session, schedule_type, schedule):
 
 
 ### sqlalchemy based approach for generating reports, this is quite memory intensive
-def generate_report_file(report_name, sql_query, db_datastore):
+def generate_report_file(report_name, sql_query, db_datastore, is_zip=False):
 
     engine = create_engine(db_connection(db_datastore))
     with engine.begin() as session:
@@ -52,13 +52,17 @@ def generate_report_file(report_name, sql_query, db_datastore):
         columns = session.execute(sql_query).keys()
     
     result = pd.DataFrame(result, columns=columns)
-    csv_path = os.path.join(os.path.abspath(CSV_PATH), (report_name.replace(' ', '_').lower() + '_' + str(datetime.today().date()) + '.csv'))
-    result.to_csv(csv_path, index=False)
+    if is_zip:
+        csv_path = os.path.join(os.path.abspath(CSV_PATH), (report_name.replace(' ', '_').lower() + '_' + str(datetime.today().date()) + '.csv.gz'))
+        result.to_csv(csv_path, index=False, compression='gzip')
+    else:
+        csv_path = os.path.join(os.path.abspath(CSV_PATH), (report_name.replace(' ', '_').lower() + '_' + str(datetime.today().date()) + '.csv'))
+        result.to_csv(csv_path, index=False)
     return csv_path
 
 ##### metastore updation functions
 # updating last_scheduled
-def update_last_scheduled(report_id, report_name):
+def update_last_scheduled(report_id):
     try:
         set_query = update(
                 Reports
@@ -67,10 +71,10 @@ def update_last_scheduled(report_id, report_name):
         engine = get_metastore_engine()
         with engine.begin() as session:
             session.execute(set_query)
-        logger.info(f'Updated last scheduled in metastore for report {report_name}')
+        logger.info(f'Updated last scheduled in metastore for report {report_id}')
     
     except Exception as e:
-        logger.exception(f'Error updating last scheduled in metastore for report {report_name}', e)
+        logger.exception(f'Error updating last scheduled in metastore for report {report_id}', e)
 
 
 ## updating sent

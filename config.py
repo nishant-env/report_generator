@@ -7,6 +7,9 @@ config = configparser.RawConfigParser()
 config.read(config_file_path)
 
 
+schema_registry_url = config.get('app', 'schema_registry_url')
+# print("Schema Registry URL:", schema_registry_url)
+
 
 ## db connection
 def db_connection(connection_string: str) -> str:
@@ -25,3 +28,5 @@ MAIL_PASSWORD = config.get('MAIL_CONFIG', 'MAIL_PASSWORD')
 
 ## file paths
 CSV_PATH = config.get('PATHS', 'CSV_GENERATION_PATH')
+
+

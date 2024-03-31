@@ -7,8 +7,10 @@ config = configparser.RawConfigParser()
 config.read(config_file_path)
 
 
+
+bootstrap_server = config.get('kafka','bootstrap_server')
 schema_registry_url = config.get('app', 'schema_registry_url')
-# print("Schema Registry URL:", schema_registry_url)
+
 
 
 ## db connection

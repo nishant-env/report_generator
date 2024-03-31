@@ -1,11 +1,14 @@
 import os
 import json
-from config import schema_registry_url
+from config import schema_registry_url,bootstrap_server
 from utils import logger, generate_report_file, send_email, update_sent
 from confluent_kafka import Consumer, KafkaError, KafkaException, TopicPartition
 from confluent_kafka.schema_registry import SchemaRegistryClient
 from confluent_kafka.schema_registry.avro import AvroDeserializer
 from confluent_kafka.serialization import SerializationContext, MessageField
+from confluent_kafka.serialization import StringDeserializer
+
+decoder = StringDeserializer(codec='utf_8')
 
 class User(object):
     def __init__(self, report_name, sql_query, db_connection, create_zip_file,
@@ -50,8 +53,8 @@ def get_schema():
 
 def main():
     schema = get_schema()
-    topic = "report3"  
-    bootstrap_servers = "localhost:19092"
+    topic = "report5"  
+    bootstrap_servers = bootstrap_server
     schema_registry_conf = {'url': schema_registry_url}
     schema_registry_client = SchemaRegistryClient(schema_registry_conf)
     
@@ -89,8 +92,11 @@ def main():
                 else:
                     raise KafkaException(msg.error())
 
+            # report_id = decoder(msg.key).split('-')[0] 
             report_id = msg.key().decode('utf-8').split('-')[0]
             user = avro_deserializer(msg.value(), SerializationContext(msg.topic(), MessageField.VALUE))
+            print("Decoded_report_id:", report_id)
+            print("Decoded_user:", user)
             
             if user is not None:
                 logger.info("Received User record {}: report_name: {}\n"
@@ -112,23 +118,26 @@ def main():
                                                       user.mail_subject,
                                                       user.mail_body))
                 
-                csv_generation_path = generate_report_file(user.report_name, user.sql_query, user.db_connection)
-                logger.info(f'Generated CSV file for report {user.report_name}, sending mail now')
+                
+                csv_generation_path = generate_report_file(user.report_name, user.sql_query, user.db_connection,user.create_zip_file)
                         
-                try:
-                    result = send_email(mail_to=user.mail_to,
-                                        mail_cc=user.mail_cc,
-                                        mail_bcc=user.mail_bcc,
-                                        mail_subject=user.mail_subject,
-                                        mail_body=user.mail_body,
-                                        mail_attachments=csv_generation_path)
-                    logger.info(f'Mail sent for report {user.report_name}, updating in metastore')
-                    if result == 1:
-                        update_sent(report_id, user.report_name)
-                        logger.info(f'Updated sent status for report {user.report_name}')
+                if csv_generation_path:
+                    try:
+                        result = send_email(mail_to=user.mail_to,
+                                            mail_cc=user.mail_cc,
+                                            mail_bcc=user.mail_bcc,
+                                            mail_subject=user.mail_subject,
+                                            mail_body=user.mail_body,
+                                            mail_attachments=csv_generation_path)
+                        logger.info(f'Mail sent for report {user.report_name}, updating in metastore')
+                        if result == 1:
+                            update_sent(report_id, user.report_name)
+                            
 
-                except Exception as e:
-                    logger.exception(f'Error processing report {user.report_name}: {e}')
+                    except Exception as e:
+                        logger.exception(f'Error processing report {user.report_name}: {e}')
+                else:
+                    logger.warning(f'Empty result for SQL query for report {user.report_name}, skipping email sending')
 
     except KeyboardInterrupt:
         consumer.close()

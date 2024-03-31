@@ -7,7 +7,7 @@ from utils import logger
 from sqlalchemy.orm import Session
 from uuid import uuid4
 from models import Reports 
-from config import db_connection, schema_registry_url
+from config import db_connection, schema_registry_url, bootstrap_server
 from utils import get_active_reports, send_report_to_queue, flush_producer, get_metastore_engine  
 from confluent_kafka.serialization import (
     StringSerializer,
@@ -15,7 +15,6 @@ from confluent_kafka.serialization import (
     MessageField,
 )
 
-from confluent_kafka.schema_registry.avro import AvroDeserializer
 
 encoder = StringSerializer()
 
@@ -38,8 +37,9 @@ def delivery_report(err, msg):
         logger.info("Delivery failed for User record {}: {}".format(msg.key(), err))
         pass
     else:    
-        logger.info('User record {} successfully produced to {} [{}] at offset {}'.format(
-        msg.key(), msg.topic(), msg.partition(), msg.offset()))
+        logger.info("Delivery Sucessfully for User record {}: {}".format(msg.key(), err))
+        # logger.info('User record {} successfully produced to {} [{}] at offset {}'.format(
+        # msg.key(), msg.topic(), msg.partition(), msg.offset()))
 
 
 
@@ -80,8 +80,8 @@ def get_schema():
 
 def main():
     schema = get_schema()
-    topic = "report3"
-    bootstrap_servers = "localhost:19092"
+    topic = "report5"
+    bootstrap_servers = bootstrap_server
     schema_registry_conf = {'url': schema_registry_url}
     schema_registry_client = SchemaRegistryClient(schema_registry_conf)
 
@@ -124,7 +124,7 @@ def main():
                                 value=value,
                                 on_delivery=delivery_report)
                 # Print the key and value after encoding
-                print("Ecoded Key:", key)
+                print("Encoded Key:", key)
                 print("avro_serializer Value:", value)
                 send_report_to_queue(producer,key,value)
                 

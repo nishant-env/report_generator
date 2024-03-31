@@ -10,6 +10,29 @@ def get_metastore_engine():
     engine = create_engine(db_connection('DB_CONNECTION_METASTORE'))
     return engine
 
+
+def execute_sql_query(sql_query, db_datastore):
+    try:
+        
+        engine = create_engine(db_connection(db_datastore))
+        with engine.connect() as connection:
+            result = connection.execute(sql_query)
+            result = result.fetchall()
+            return result
+    except Exception as e:
+        # Log the exception or handle it as needed
+        logger.exception(f'Error executing SQL query: {e}')
+        return None
+   
+
+    
+            
+
+
+
+
+
+
 def get_active_reports(session, schedule_type, schedule):
     try:
         fetch_query = select(
@@ -32,33 +55,52 @@ def get_active_reports(session, schedule_type, schedule):
 
         logger.info(f'Fetching active report metadata for schedule: {schedule}, schedule_type: {schedule_type}')
         logger.debug(fetch_query)
-
+        print("fetch_query:" ,fetch_query)
         result = session.execute(fetch_query).all()
+        # result = session.execute(fetch_query)
+        print("the result:",result)
 
         logger.info("Successfully fetched reports")
         logger.debug(f'Fetched result: {result}')
         return result
     except Exception as e:
-        logger.exception(e)
-
+        logger.exception(f'Error fetching active reports: {e}')
+        return None
 
 
 ### sqlalchemy based approach for generating reports, this is quite memory intensive
-def generate_report_file(report_name, sql_query, db_datastore, is_zip=False):
+def generate_report_file(report_name, sql_query, db_datastore, create_zip_file): 
+
 
     engine = create_engine(db_connection(db_datastore))
     with engine.begin() as session:
-        result = session.execute(sql_query).all()
-        columns = session.execute(sql_query).keys()
-    
-    result = pd.DataFrame(result, columns=columns)
-    if is_zip:
-        csv_path = os.path.join(os.path.abspath(CSV_PATH), (report_name.replace(' ', '_').lower() + '_' + str(datetime.today().date()) + '.csv.gz'))
-        result.to_csv(csv_path, index=False, compression='gzip')
+        result_proxy = session.execute(sql_query)  
+        columns = result_proxy.keys() if result_proxy else []
+
+        result = result_proxy.fetchall()
+    # Check if result is not empty
+    if result:   
+        result_df = pd.DataFrame(result, columns=columns)
+        try:
+           
+            if create_zip_file == True:
+                csv_path = os.path.join(os.path.abspath(CSV_PATH), (report_name.replace(' ', '_').lower() + '_' + str(datetime.today().date()) + '.csv.gz'))
+                result_df.to_csv(csv_path, index=False, compression='gzip')
+                print("CSV Path (compressed):", csv_path)
+            else:
+                csv_path = os.path.join(os.path.abspath(CSV_PATH), (report_name.replace(' ', '_').lower() + '_' + str(datetime.today().date()) + '.csv'))
+                result_df.to_csv(csv_path, index=False)
+                print("CSV Path:", csv_path)
+
+            logger.info(f'Generated CSV file for report {report_name}')
+            return csv_path
+        except Exception as e:
+            logger.info("Error occurred:", e)
+            return None
     else:
-        csv_path = os.path.join(os.path.abspath(CSV_PATH), (report_name.replace(' ', '_').lower() + '_' + str(datetime.today().date()) + '.csv'))
-        result.to_csv(csv_path, index=False)
-    return csv_path
+        logger.info("Query result is empty, skipping report file generation")
+        return None
+    
 
 ##### metastore updation functions
 # updating last_scheduled

@@ -20,3 +20,10 @@ MAIL_PASSWORD = *MAIL_APP_PASSWORD*
 
 [PATHS]<br>
 CSV_GENERATION_PATH=
+
+
+[kafka]
+bootstrap_server =
+
+[app]
+schema_registry_url = 

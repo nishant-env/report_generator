@@ -1,7 +1,8 @@
-from config import bootstrap_server
-producer_conf = {'bootstrap.servers': bootstrap_server, 'client.id': 'producer_1'}
+from config import bootstrap_server, consumer_group
+
+producer_conf = {'bootstrap.servers': bootstrap_server, 'client.id': 'producer_ams'}
 
 
 consumer_conf = {'bootstrap.servers': bootstrap_server,
-                     'group.id': "group_1_1",
-                     'auto.offset.reset': "smallest"}
+                     'group.id': consumer_group,
+                     'auto.offset.reset': "smallest", "client.id": 'client_1'}

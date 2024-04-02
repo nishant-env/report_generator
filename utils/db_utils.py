@@ -50,10 +50,14 @@ def generate_report_file(report_name, sql_query, db_datastore, create_zip_file):
 
     engine = create_engine(db_connection(db_datastore))
     with engine.begin() as session:
-        result_proxy = session.execute(sql_query)  
-        columns = result_proxy.keys() if result_proxy else []
+        try:
+            result_proxy = session.execute(sql_query)  
+            columns = result_proxy.keys() if result_proxy else []
 
-        result = result_proxy.fetchall()
+            result = result_proxy.fetchall()
+        except Exception as e:
+            logger.exception(f'Report Generation failed for report {report_name}, reason: ', e)
+            return None
     # Check if result is not empty
     if result:   
         result_df = pd.DataFrame(result, columns=columns)
@@ -66,7 +70,7 @@ def generate_report_file(report_name, sql_query, db_datastore, create_zip_file):
                 csv_path = os.path.join(os.path.abspath(CSV_PATH), (report_name.replace(' ', '_').lower() + '_' + str(datetime.today().date()) + '.csv'))
                 result_df.to_csv(csv_path, index=False)
 
-            logger.info(f'Generated file for report {report_name}')
+            logger.info(f'Generated file for report {report_name}, sending mail now')
             return csv_path
         
         except Exception as e:

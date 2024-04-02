@@ -8,8 +8,15 @@ config.read(config_file_path)
 
 
 
+
+## kafka configs
 bootstrap_server = config.get('KAFKA','BOOTSTRAP_SERVER')
-schema_registry_url = config.get('SCHEMAREGISRTY_TYPE', 'SCHEMA_REGISTRY_URL')
+kafka_topic = config.get('KAFKA', 'TOPIC_NAME')
+consumer_group = config.get('KAFKA','CONSUMER_GROUP')
+
+
+## schema registry config
+schema_registry_url = config.get('SCHEMAREGISRTY', 'SCHEMA_REGISTRY_URL')
 
 
 

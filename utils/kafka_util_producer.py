@@ -1,15 +1,16 @@
 from json import loads
-from config import bootstrap_server
 from confluent_kafka import Producer
-from sqlalchemy import update, func
 from .log_utils import logger
 from .configuration_utils import producer_conf
 from .db_utils import update_last_scheduled
-from models import Reports
-from confluent_kafka.schema_registry.avro import AvroDeserializer
-from confluent_kafka.serialization import StringDeserializer
+from .avro_utils import avro_serialization_formatter, avro_deserialization_formatter
+from confluent_kafka.serialization import StringSerializer, StringDeserializer
+from config import kafka_topic
 
 
+
+producer = Producer(producer_conf)
+encoder = StringSerializer(codec='utf_8')
 decoder = StringDeserializer(codec='utf_8')
 
 ## defining custom partitioner
@@ -29,31 +30,31 @@ def partitioner(key):
         return return_partition
 
 
-producer = Producer(producer_conf)
+
 
 
 def produced_callback(error, message):
     if error is not None:
         logger.exception(f'Error Occured for report {error.key()}')
     else:
-        logger.info('User record {} successfully sent to queue for {} [{}] at offset {}'.format(
-        message.key(), message.topic(), message.partition(), message.offset()))
+        logger.info(f'Report_id: {message.key()}, report_name: {avro_deserialization_formatter(message.value()).report_name} successfully sent to queue on topic {message.topic()} at partition {message.partition()} at offset {message.offset()}')
         ### setting the last scheduled time here 
         update_last_scheduled(
             report_id=message.key().decode('utf-8').split('-')[0])
         
 
 
-def send_report_to_queue(producer, key, value):
+def send_report_to_queue(key, value):
+        key = encoder(key)
         producer.produce(
-            topic='esewa3',
+            topic=kafka_topic,
             key=key,
-            value=value,
+            value=avro_serialization_formatter(value),
             partition=partitioner(key),
             callback=produced_callback
         )
         producer.poll(2)
 
 
-def flush_producer(producer):
+def flush_producer():
     producer.flush()

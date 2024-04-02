@@ -8,8 +8,8 @@ config.read(config_file_path)
 
 
 
-bootstrap_server = config.get('kafka','bootstrap_server')
-schema_registry_url = config.get('app', 'schema_registry_url')
+bootstrap_server = config.get('KAFKA','BOOTSTRAP_SERVER')
+schema_registry_url = config.get('SCHEMAREGISRTY_TYPE', 'SCHEMA_REGISTRY_URL')
 
 
 

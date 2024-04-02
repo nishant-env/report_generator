@@ -10,6 +10,7 @@ from confluent_kafka.serialization import StringDeserializer
 
 decoder = StringDeserializer(codec='utf_8')
 offsets_to_commit = set()
+
 def user_to_dict(obj, ctx):
     if obj is None:
         return None
@@ -54,7 +55,7 @@ def main():
                     if offsets_to_commit:
                         topic_partitions = [TopicPartition(topic, partition, offset) for topic, partition, offset in offsets_to_commit]
                         consumer.commit(offsets=topic_partitions)
-                        print("Committed offsets:", offsets_to_commit)
+                        logger.info("Committed offsets:", offsets_to_commit)
         
 
             if msg.error():

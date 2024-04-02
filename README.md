@@ -22,8 +22,8 @@ MAIL_PASSWORD = *MAIL_APP_PASSWORD*
 CSV_GENERATION_PATH=
 
 
-[kafka]
-bootstrap_server =
+[KAFKA]<br>
+BOOTSTRAP_SERVER =
 
-[app]
-schema_registry_url = 
+[SCHEMAREGISRTY_TYPE]<br>
+SCHEMA_REGISTRY_URL = 

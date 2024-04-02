@@ -44,14 +44,11 @@ def main():
                 key = encoder(report_key)
                 value = avro_serializer(user, SerializationContext(topic, MessageField.VALUE))
                 send_report_to_queue(producer,key,value)
-                
-
-
     except KeyboardInterrupt:
         pass
     except Exception as e:
        logger.exception("An error occurred: {}".format(str(e)))
-       
+
     flush_producer(producer)
 
 

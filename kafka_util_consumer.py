@@ -38,8 +38,8 @@ def main():
 
                     # Commit offsets of processed messages
         
-                    topic_partition = TopicPartition(msg.topic(), msg.partition(), msg.offset())
-                    consumer.commit(offsets=[topic_partition])
+                    # topic_partition = TopicPartition(msg.topic(), msg.partition(), msg.offset())
+                    consumer.commit()
                     logger.info(f"Committed on partition {msg.partition()} offset: {msg.offset()}")
         
 

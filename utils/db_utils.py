@@ -47,8 +47,11 @@ def get_active_reports(session, schedule_type, schedule):
 ### sqlalchemy based approach for generating reports, this is quite memory intensive
 def generate_report_file(report_name, sql_query, db_datastore, create_zip_file): 
 
-
-    engine = create_engine(db_connection(db_datastore))
+    try:
+        engine = create_engine(db_connection(db_datastore))
+    except Exception as e:
+        logger.info("Error getting db engine", e)
+        return None
     with engine.begin() as session:
         try:
             result_proxy = session.execute(sql_query)  

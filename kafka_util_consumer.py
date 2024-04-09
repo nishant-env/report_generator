@@ -81,6 +81,8 @@ def main():
                             
                     except Exception as e:
                         logger.exception(f'Error processing report {report.report_name}: {e}')
+                else:
+                    logger.info('No file generated, skipping')
 
     except KeyboardInterrupt:
         consumer.close()

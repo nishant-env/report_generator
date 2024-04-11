@@ -46,14 +46,19 @@ def produced_callback(error, message):
 
 def send_report_to_queue(key, value):
         key = encoder(key)
-        producer.produce(
-            topic=kafka_topic,
-            key=key,
-            value=avro_serialization_formatter(value),
-            partition=partitioner(key),
-            callback=produced_callback
-        )
+        serialized_value = avro_serialization_formatter(value)
+        if serialized_value:
+            producer.produce(
+                topic=kafka_topic,
+                key=key,
+                value=serialized_value,
+                partition=partitioner(key),
+                callback=produced_callback
+            )
+        else:
+            logger.info("Cannot send this message to queue")
         producer.poll(2)
+
 
 
 def flush_producer():

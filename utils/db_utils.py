@@ -1,10 +1,11 @@
 import pandas as pd
 import os,sys
-from datetime import datetime
+from datetime import datetime, timedelta
 from sqlalchemy import select, create_engine, update, func
 from models import Reports, MailProperties
 from .log_utils import logger
 from config import db_connection, CSV_PATH
+from .os_utils import create_folder
 
 def get_metastore_engine():
     engine = create_engine(db_connection('DB_CONNECTION_METASTORE'))
@@ -45,10 +46,11 @@ def get_active_reports(session, schedule_type, schedule):
 
 
 ### sqlalchemy based approach for generating reports, this is quite memory intensive
-def generate_report_file(report_name, sql_query, db_datastore, create_zip_file): 
+def generate_report_file(report_name, sql_query, db_datastore, create_zip_file, type='daily'): 
 
     try:
         engine = create_engine(db_connection(db_datastore))
+
     except Exception as e:
         logger.info("Error getting db engine", e)
         return None
@@ -66,12 +68,13 @@ def generate_report_file(report_name, sql_query, db_datastore, create_zip_file):
     if result:   
         result_df = pd.DataFrame(result, columns=columns)
         try:
-           
+            csv_path = os.path.join(os.path.abspath(CSV_PATH), (type+'_'+str(datetime.today().date()-timedelta(days=1))))
+            create_folder(csv_path)
             if create_zip_file == True:
-                csv_path = os.path.join(os.path.abspath(CSV_PATH), (report_name.replace(' ', '_').lower() + '_' + str(datetime.today().date()) + '.csv.gz'))
+                csv_path = os.path.join(os.path.abspath(csv_path), (report_name.replace(' ', '_').lower() + '_' + str(datetime.today().date()-timedelta(days=1)) + '.csv.gz'))
                 result_df.to_csv(csv_path, index=False, compression='gzip')
             else:
-                csv_path = os.path.join(os.path.abspath(CSV_PATH), (report_name.replace(' ', '_').lower() + '_' + str(datetime.today().date()) + '.csv'))
+                csv_path = os.path.join(os.path.abspath(csv_path), (report_name.replace(' ', '_').lower() + '_' + str(datetime.today().date()-timedelta(days=1)) + '.csv'))
                 result_df.to_csv(csv_path, index=False)
 
             logger.info(f'Generated file for report {report_name}, sending mail now')

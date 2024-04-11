@@ -4,6 +4,7 @@ from confluent_kafka.schema_registry import SchemaRegistryClient
 from confluent_kafka.schema_registry.avro import AvroSerializer, AvroDeserializer
 from config import schema_registry_url, kafka_topic
 from models import avro_schema_str
+from .log_utils import logger
 
 
 
@@ -54,7 +55,9 @@ schema_registry_client = SchemaRegistryClient(schema_registry_config)
 ## Serializer definition
 avro_serializer = AvroSerializer(schema_registry_client, avro_schema_str, report_obj_to_dict)
 def avro_serialization_formatter(report_obj):
-    report_model = ReportModel(
+    try:
+
+        report_model = ReportModel(
            report_obj["report_name"],
            report_obj["sql_query"],
            report_obj["db_connection"],
@@ -64,9 +67,12 @@ def avro_serialization_formatter(report_obj):
             report_obj["mail_bcc"],
             report_obj["mail_subject"],
            report_obj["mail_body"]
-    )
-    serialized_object = avro_serializer(report_model, SerializationContext(kafka_topic, MessageField.VALUE))
-    return serialized_object
+        )
+        serialized_object = avro_serializer(report_model, SerializationContext(kafka_topic, MessageField.VALUE))
+        return serialized_object
+    except Exception as e:
+        logger.exception('Error Serializing Data', e)
+        return None
 
 ### deserialization
 avro_deserializer = AvroDeserializer(schema_registry_client, avro_schema_str, dict_to_report_obj)

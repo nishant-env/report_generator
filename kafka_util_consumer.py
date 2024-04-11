@@ -1,6 +1,7 @@
 from utils import logger, generate_report_file, send_email, update_sent ,consumer_conf, avro_deserialization_formatter
 from confluent_kafka import Consumer, KafkaError, KafkaException, TopicPartition
 from config import kafka_topic
+import time
 
 def assignmentCallback(_,partitions):
     logger.info('Subscription Successful')
@@ -15,7 +16,8 @@ def revokationCallback(_,partitions):
         logger.info(f'Revoked from {partition.topic}, partition {partition.partition}, offset {partition.offset}')
     logger.info('-----------------------------------------------------------------------------')
 
-def main():     
+def main(): 
+
     consumer = Consumer(consumer_conf)
     consumer.subscribe([kafka_topic], on_assign=assignmentCallback, on_revoke=revokationCallback) 
    
@@ -41,6 +43,7 @@ def main():
                     # topic_partition = TopicPartition(msg.topic(), msg.partition(), msg.offset())
                     consumer.commit()
                     logger.info(f"Committed on partition {msg.partition()} offset: {msg.offset()}")
+                    # time.sleep(60)
         
 
             if msg.error():

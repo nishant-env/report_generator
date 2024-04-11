@@ -67,7 +67,7 @@ def main():
                             "\tmail_body: {}\n".format(msg.key(),report.report_name,report.sql_query,report.db_connection,report.create_zip_file,report.mail_to,report.mail_cc,report.mail_bcc,report.mail_subject,report.mail_body))
                 
                 logger.info(f'Generating report file for: {report.report_name}')
-                csv_generation_path = generate_report_file(report.report_name, report.sql_query, report.db_connection,report.create_zip_file)
+                csv_generation_path = generate_report_file(report.report_name, report.sql_query, report.db_connection,report.create_zip_file, report.type)
 
                       
                 if csv_generation_path:

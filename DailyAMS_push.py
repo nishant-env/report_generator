@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 import nepali_datetime
 import argparse
 
-def main(schedule, schedule_type, from_date, to_date):
+def main(schedule, schedule_type, from_date, to_date, type):
 
     logger.info("Producing user records to topic {}. ^C to exit.".format(kafka_topic))
     try:
@@ -25,7 +25,8 @@ def main(schedule, schedule_type, from_date, to_date):
                         "mail_cc": report.mail_cc,
                         "mail_bcc": report.mail_bcc,
                         "mail_subject": report.mail_subject,
-                        "mail_body": report.mail_body
+                        "mail_body": report.mail_body,
+                        "type": type
                     }
                     send_report_to_queue(report_key, modified_report)
             else:
@@ -52,11 +53,11 @@ if __name__ == "__main__":
         current_year = nepali_datetime.date.today().year
         current_month = nepali_datetime.date.today().month
         days_in_current_month = nepali_datetime._days_in_month(current_year, current_month)
-        if today_date == days_in_current_month:
+        if today_date == 29:
             logger.info("Running for monthly report")
             from_date = str(nepali_datetime.date.today().to_datetime_date() - timedelta(days=days_in_current_month)) + ' 00:00:00'
             to_date = str(nepali_datetime.date.today().to_datetime_date() - timedelta(days=1)) + ' 23:59:59'
-            main('MONTHLY', 'DEFAULT_AMS', from_date, to_date)
+            main('MONTHLY', 'DEFAULT_AMS', from_date, to_date, 'monthly')
 
         else:
             raise Exception('Not the last day of month')
@@ -68,7 +69,7 @@ if __name__ == "__main__":
         from_date = str(yesterday_date) + ' 00:00:00' 
         to_date = str(yesterday_date) + ' 23:59:59'
         logger.info("Running for daily report")
-        main('DAILY', 'DAILY_AMS', from_date, to_date)
+        main('DAILY', 'DAILY_AMS', from_date, to_date, 'daily')
 
 
 

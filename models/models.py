@@ -3,6 +3,7 @@ import enum
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import Column, Integer, String, Boolean, DateTime, Enum, SMALLINT, ForeignKey
 from sqlalchemy.dialects.mysql import LONGTEXT
+from sqlalchemy.sql import func
 
 
 
@@ -14,11 +15,19 @@ class ReportStatus(enum.Enum):
 
 Base = declarative_base()
 
+class Departments(Base):
+    __tablename__ = 'departments'
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    created_date = Column(DateTime, server_default=func.NOW())
+    last_modified_date = Column(DateTime, server_default=func.NOW())
+    department_name = Column(String(255))
+    
+
 class Reports(Base):
     __tablename__ = 'reports'
     id = Column(Integer, primary_key=True, autoincrement=True)
-    created_date = Column(DateTime, default='NOW()')
-    last_modified_date = Column(DateTime, default='NOW()')
+    created_date = Column(DateTime, server_default=func.NOW())
+    last_modified_date = Column(DateTime, server_default=func.NOW())
     last_scheduled = Column(DateTime)
     name = Column(String(100))
     schedule = Column(String(50))
@@ -32,6 +41,7 @@ class Reports(Base):
     schedule_type = Column(String(50))
     create_zip_file = Column(Boolean)
     encryption_value = Column(String(50))
+    department_id = Column(Integer, ForeignKey(Departments.id))
 
 
 class MailProperties(Base):

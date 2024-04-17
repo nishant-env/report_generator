@@ -53,7 +53,7 @@ if __name__ == "__main__":
         current_year = nepali_datetime.date.today().year
         current_month = nepali_datetime.date.today().month
         days_in_current_month = nepali_datetime._days_in_month(current_year, current_month)
-        if today_date == 29:
+        if today_date == days_in_current_month:
             logger.info("Running for monthly report")
             from_date = str(nepali_datetime.date.today().to_datetime_date() - timedelta(days=days_in_current_month)) + ' 00:00:00'
             to_date = str(nepali_datetime.date.today().to_datetime_date() - timedelta(days=1)) + ' 23:59:59'

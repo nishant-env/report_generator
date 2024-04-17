@@ -31,6 +31,6 @@ CONSUMER_GROUP=
 SCHEMA_REGISTRY_URL = 
 <br>
 
-Execute this command for starting kafka environment
-**docker compose -f <file_location> up -d** for first time
-**docker compose -f <file_location> start/stop** afterwards
+Execute this command for starting kafka environment<br>
+*docker compose -f <file_location> up -d* for first time<br>
+*docker compose -f <file_location> start/stop* afterwards<br>

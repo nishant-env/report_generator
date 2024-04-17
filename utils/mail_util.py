@@ -7,9 +7,9 @@ mailer = Mailer(mail_host=SMTP_HOST, mail_port=SMTP_PORT, mail_address=MAIL_FROM
 def send_email(mail_to, mail_cc, mail_bcc, mail_subject, mail_body, mail_attachments):
     try:
         mailer.send_mail(
-            to_address=[mail_to], 
-            mail_cc=[mail_cc] if mail_cc is not None else None, 
-            mail_bcc=[mail_bcc] if mail_bcc is not None else None, 
+            to_address=mail_to.split(','), 
+            mail_cc=mail_cc.split(',') if mail_cc is not None else None, 
+            mail_bcc=mail_bcc.split(',') if mail_bcc is not None else None, 
             subject=mail_subject, 
             attachments=[mail_attachments] if mail_attachments is not None else None,
             mail_body=mail_body)

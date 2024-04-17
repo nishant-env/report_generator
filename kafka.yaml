@@ -1,0 +1,146 @@
+# created by Nishant
+
+version: '1'
+
+# this will create a new network.
+networks:
+  kafka-nw:
+    driver: bridge
+services:
+  zookeeper:
+    image: zookeeper
+    networks:
+      - kafka-nw
+      #volumes for persisting data, these two locations were taken from zookeeper docs
+    volumes:
+      - zoo_data:/data
+      - zoo_log:/datalogs
+
+  kafka_1:
+    image: "confluentinc/cp-kafka:7.6.0"
+    networks:
+      - kafka-nw
+    volumes:
+      - kafka_broker_1:/bitnami/kafka
+      # host is the container name in case of docker network
+    environment:
+      - KAFKA_NODE_ID=1
+      - KAFKA_ZOOKEEPER_CONNECT=zookeeper:2181/cluster_1
+      - KAFKA_LISTENERS=INTERNAL_LISTENER://kafka_1:19092, EXTERNEL_LISTENER://0.0.0.0:9092
+      - KAFKA_LISTENER_SECURITY_PROTOCOL_MAP=INTERNAL_LISTENER:PLAINTEXT, EXTERNEL_LISTENER:PLAINTEXT
+      - KAFKA_ADVERTISED_LISTENERS=INTERNAL_LISTENER://kafka_1:19092, EXTERNEL_LISTENER://localhost:9092
+      - KAFKA_INTER_BROKER_LISTENER_NAME=INTERNAL_LISTENER
+      - KAFKA_LOG4J_ROOT_LOGLEVEL=DEBUG
+      - KAFKA_TOOLS_LOG4J_LOGLEVEL=DEBUG
+      # kafka will only start after zookeeper
+    depends_on:
+      - zookeeper
+
+      # exposing the kafka client port to host machine
+    ports:
+      - 9092:9092
+
+  kafka_2:
+    image: "confluentinc/cp-kafka:7.6.0"
+    networks:
+      - kafka-nw
+    volumes:
+      - kafka_broker_2:/bitnami/kafka
+      # host is the container name in case of docker network
+    environment:
+      - KAFKA_NODE_ID=2
+      - KAFKA_ZOOKEEPER_CONNECT=zookeeper:2181/cluster_1
+      - KAFKA_LISTENER_SECURITY_PROTOCOL_MAP=INTERNAL_LISTENER:PLAINTEXT, EXTERNEL_LISTENER:PLAINTEXT
+      - KAFKA_LISTENERS=INTERNAL_LISTENER://kafka_2:19093, EXTERNEL_LISTENER://0.0.0.0:9093
+      - KAFKA_ADVERTISED_LISTENERS=INTERNAL_LISTENER://kafka_2:19093, EXTERNEL_LISTENER://localhost:9093
+      - KAFKA_INTER_BROKER_LISTENER_NAME=INTERNAL_LISTENER
+      - KAFKA_LOG4J_ROOT_LOGLEVEL=DEBUG
+      - KAFKA_TOOLS_LOG4J_LOGLEVEL=DEBUG
+      # kafka will only start after first broker
+    depends_on:
+      - kafka_1
+
+      # exposing the kafka client port to host machine
+    ports:
+      - 9093:9093
+
+  kafka_3:
+    image: "confluentinc/cp-kafka:7.6.0"
+    networks:
+      - kafka-nw
+    volumes:
+      - kafka_broker_3:/bitnami/kafka
+      # host is the container name in case of docker network
+    environment:
+      - KAFKA_NODE_ID=3
+      - KAFKA_ZOOKEEPER_CONNECT=zookeeper:2181/cluster_1
+      - KAFKA_LISTENERS=INTERNAL_LISTENER://kafka_3:19094, EXTERNEL_LISTENER://0.0.0.0:9094
+      - KAFKA_LISTENER_SECURITY_PROTOCOL_MAP=INTERNAL_LISTENER:PLAINTEXT, EXTERNEL_LISTENER:PLAINTEXT
+      - KAFKA_ADVERTISED_LISTENERS=INTERNAL_LISTENER://kafka_3:19094, EXTERNEL_LISTENER://localhost:9094
+      - KAFKA_INTER_BROKER_LISTENER_NAME=INTERNAL_LISTENER
+      - KAFKA_LOG4J_ROOT_LOGLEVEL=DEBUG
+      - KAFKA_TOOLS_LOG4J_LOGLEVEL=DEBUG
+      # kafka will only start after second broker
+    depends_on:
+      - kafka_2
+
+      # exposing the kafka client port to host machine
+    ports:
+      - 9094:9094
+  console:
+    container_name: redpanda-console
+    image: docker.redpanda.com/redpandadata/console:v2.4.5
+    volumes: [redpanda-0:/data]
+    networks:
+      - kafka-nw
+    depends_on:
+      - schemaReg
+    entrypoint: /bin/sh
+    command: -c 'echo "$$CONSOLE_CONFIG_FILE" > /tmp/config.yml; /app/console'
+    environment:
+      CONFIG_FILEPATH: /tmp/config.yml
+      CONSOLE_CONFIG_FILE: |
+        kafka:
+          brokers: ["kafka_1:19092","kafka_2:19093"]
+          schemaRegistry:
+            enabled: true
+            urls: ["http://confluent_schema_registry:8081"]
+        redpanda:
+          adminApi:
+            enabled: false
+            urls: ["http://redpanda-0:9644"]
+    ports:
+      - 8080:8080
+      
+  schemaReg:
+    container_name: confluent_schema_registry
+    image: confluentinc/cp-schema-registry:7.5.3
+    networks:
+        - kafka-nw
+    depends_on:
+        - kafka_3
+    ports:
+      - "8081:8081"
+    environment:
+      SCHEMA_REGISTRY_HOST_NAME: schemaReg
+      SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: 'kafka_1:19092,kafka_2:19093,kafka_3:19094'
+      SCHEMA_REGISTRY_LISTENERS: http://0.0.0.0:8081
+    
+      
+
+
+volumes:
+  zoo_data:
+    driver: local
+  zoo_log:
+    driver: local
+  kafka_broker_1:
+    driver: local
+  kafka_broker_2:
+    driver: local
+  kafka_broker_3:
+    driver: local
+  redpanda-0:
+    driver: local
+  schema_reg_0:
+    driver: local

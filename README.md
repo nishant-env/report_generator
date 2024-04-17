@@ -29,3 +29,8 @@ CONSUMER_GROUP=
 
 [SCHEMAREGISRTY]<br>
 SCHEMA_REGISTRY_URL = 
+<br>
+
+Execute this command for starting kafka environment
+**docker compose -f <file_location> up -d** for first time
+**docker compose -f <file_location> start/stop** afterwards

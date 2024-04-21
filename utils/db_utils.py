@@ -71,8 +71,8 @@ def generate_report_file(report_name, sql_query, db_datastore, create_zip_file, 
             csv_path = os.path.join(os.path.abspath(CSV_PATH), (type+'_'+str(datetime.today().date()-timedelta(days=1))))
             create_folder(csv_path)
             if create_zip_file == True:
-                csv_path = os.path.join(os.path.abspath(csv_path), (report_name.replace(' ', '_').lower() + '_' + str(datetime.today().date()-timedelta(days=1)) + '.csv.gz'))
-                result_df.to_csv(csv_path, index=False, compression='gzip')
+                csv_path = os.path.join(os.path.abspath(csv_path), (report_name.replace(' ', '_').lower() + '_' + str(datetime.today().date()-timedelta(days=1)) + '.csv.xz'))
+                result_df.to_csv(csv_path, index=False, compression='xz')
             else:
                 csv_path = os.path.join(os.path.abspath(csv_path), (report_name.replace(' ', '_').lower() + '_' + str(datetime.today().date()-timedelta(days=1)) + '.csv'))
                 result_df.to_csv(csv_path, index=False)

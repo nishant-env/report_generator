@@ -45,10 +45,10 @@ if __name__ == "__main__":
         prog='eSewa Ams',
         description='This program schedules report for both daily and report, based on the argument passed'
     )
-    parser.add_argument('schedule_type',default='daily', nargs='?', help='Type "daily" for daily report and "monthly" for monthly report', choices=['daily', 'monthly'])
+    parser.add_argument('schedule_type',default='daily', nargs='?', help='Type "daily" for daily report and "monthly_last" for monthly report at last of month and "monthly_first" for monthly report at first day of month', choices=['daily', 'monthly_last', 'monthly_first'])
     args = parser.parse_args()
     logger.info(f"Argument received, {args.schedule_type}")
-    if args.schedule_type.lower() == 'monthly':
+    if args.schedule_type.lower() == 'monthly_last':
         ### run for monthly
         # check if today is the last day of month
         today_date = nepali_datetime.date.today().day
@@ -65,7 +65,27 @@ if __name__ == "__main__":
         else:
             raise Exception('Not the last day of month')
 
+    elif args.schedule_type.lower() == 'monthly_first':
+        ### run for monthly
+        # check if today is the first day of month
+        today_date = nepali_datetime.date.today().day
+        current_year = nepali_datetime.date.today().year
+        previous_month = nepali_datetime.date.today().month - 1
+        previous_month = 12 if previous_month == 0 else previous_month
+        previous_year = current_year - 1 if previous_month == 12 else current_year
+        days_in_previous_month = nepali_datetime._days_in_month(previous_year, previous_month)
+        if today_date == 1:
+            logger.info("Running for monthly report")
+            yesterday_date = (datetime.today() - timedelta(days=1)).strftime('%Y-%m-%d')
+            from_date = str(nepali_datetime.date.today().to_datetime_date() - timedelta(days=days_in_previous_month)) + ' 00:00:00'
+            to_date = str(nepali_datetime.date.today().to_datetime_date() - timedelta(days=1)) + ' 23:59:59'
+            main('MONTHLY', 'MONTH_FIRST_DAY', from_date, to_date, yesterday_date, 'monthly')
 
+        else:
+            raise Exception('Not the First day of month')
+
+
+    
     else:
         ### run for daily
         yesterday_date = (datetime.today() - timedelta(days=1)).strftime('%Y-%m-%d')

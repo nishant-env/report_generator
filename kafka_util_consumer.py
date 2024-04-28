@@ -1,7 +1,8 @@
-from utils import logger, generate_report_file, send_email, update_sent ,consumer_conf, avro_deserialization_formatter
-from confluent_kafka import Consumer, KafkaError, KafkaException, TopicPartition
+from utils import logger, generate_report_file, send_email, update_sent ,consumer_conf, avro_deserialization_formatter, update_time_taken, update_last_error
+from confluent_kafka import Consumer, KafkaError, KafkaException
 from config import kafka_topic
 import time
+import datetime
 
 def assignmentCallback(_,partitions):
     logger.info('Subscription Successful')
@@ -53,7 +54,12 @@ def main():
                 else:
                     raise KafkaException(msg.error())
             report_id = msg.key().decode('utf-8').split('-')[0]
-            report = avro_deserialization_formatter(msg.value())
+            try:
+                report = avro_deserialization_formatter(msg.value())
+            except Exception as e:
+                logger.exception('Error deserializing the message', e)
+                update_last_error(report_id, error_message=f'{str(datetime.datetime.now())} - Error deseralizing the message')
+
     
             if report is not None:
                 logger.debug("Received report record {}: report_name: {}\n"
@@ -67,11 +73,15 @@ def main():
                             "\tmail_body: {}\n".format(msg.key(),report.report_name,report.sql_query,report.db_connection,report.create_zip_file,report.mail_to,report.mail_cc,report.mail_bcc,report.mail_subject,report.mail_body))
                 
                 logger.info(f'Generating report file for: {report.report_name}')
-                csv_generation_path = generate_report_file(report.report_name, report.sql_query, report.db_connection,report.create_zip_file, report.type)
-
+                start_time = time.time()
+                csv_generation_path = generate_report_file(report_id, report.report_name, report.sql_query, report.db_connection,report.create_zip_file, report.type, report.logical_date)
+                end_time = time.time()
+                time_taken = max(1,int(end_time - start_time))
                       
                 if csv_generation_path:
                     try:
+                        logger.info(f'Report Generated, took {time_taken}s, sending mail now')
+                        update_time_taken(report_id, report.report_name, time_taken)
                         result = send_email(mail_to=report.mail_to,
                                             mail_cc=report.mail_cc,
                                             mail_bcc=report.mail_bcc,
@@ -83,7 +93,8 @@ def main():
                             update_sent(report_id, report.report_name)
                             
                     except Exception as e:
-                        logger.exception(f'Error processing report {report.report_name}: {e}')
+                        logger.exception(f'Error sending mail {report.report_name}: {e}')
+                        update_last_error(report_id=report_id, error_message = f'{str(datetime.datetime.now())} - Error sending email')
                 else:
                     logger.info('No file generated, skipping')
 

@@ -2,10 +2,11 @@ from json import loads
 from confluent_kafka import Producer
 from .log_utils import logger
 from .configuration_utils import producer_conf
-from .db_utils import update_last_scheduled
+from .db_utils import update_last_scheduled, update_last_error
 from .avro_utils import avro_serialization_formatter, avro_deserialization_formatter
 from confluent_kafka.serialization import StringSerializer, StringDeserializer
 from config import kafka_topic
+import datetime
 
 
 
@@ -57,6 +58,7 @@ def send_report_to_queue(key, value):
             )
         else:
             logger.info("Cannot send this message to queue")
+            update_last_error(report_id=key.split('-')[0], error_message=f'{datetime.datetime.now()} - Error Serializing message')
         producer.poll(2)
 
 

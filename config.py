@@ -13,6 +13,7 @@ config.read(config_file_path)
 bootstrap_server = config.get('KAFKA','BOOTSTRAP_SERVER')
 kafka_topic = config.get('KAFKA', 'TOPIC_NAME')
 consumer_group = config.get('KAFKA','CONSUMER_GROUP')
+consumer_max_poll_timeout_ms = config.get('KAFKA', 'CONSUMER_MAX_TIMEOUT_MS')
 
 
 ## schema registry config

@@ -10,7 +10,7 @@ from .log_utils import logger
 
 class ReportModel(object):
     def __init__(self, report_name, sql_query, db_connection, create_zip_file,
-                 mail_to, mail_cc, mail_bcc, mail_subject, mail_body, type):
+                 mail_to, mail_cc, mail_bcc, mail_subject, mail_body, type, logical_date):
         self.report_name = report_name
         self.sql_query = sql_query
         self.db_connection = db_connection
@@ -21,6 +21,8 @@ class ReportModel(object):
         self.mail_subject = mail_subject
         self.mail_body = mail_body
         self.type = type
+        self.logical_date = logical_date
+
 
 
 
@@ -36,7 +38,8 @@ def report_obj_to_dict(report, ctx):
         "mail_bcc": report.mail_bcc,
         "mail_subject": report.mail_subject,
         "mail_body": report.mail_body,
-        "type": report.type
+        "type": report.type,
+        "logical_date": report.logical_date
     }
 
 def dict_to_report_obj(obj, ctx):
@@ -45,7 +48,7 @@ def dict_to_report_obj(obj, ctx):
 
     return ReportModel(report_name=obj['report_name'], sql_query=obj['sql_query'], db_connection=obj['db_connection'],
                 create_zip_file=obj['create_zip_file'], mail_to=obj['mail_to'], mail_cc=obj['mail_cc'],
-                mail_bcc=obj['mail_bcc'], mail_subject=obj['mail_subject'], mail_body=obj['mail_body'], type=obj['type'])
+                mail_bcc=obj['mail_bcc'], mail_subject=obj['mail_subject'], mail_body=obj['mail_body'], type=obj['type'], logical_date=obj['logical_date'])
 
 
 
@@ -70,7 +73,8 @@ def avro_serialization_formatter(report_obj):
             report_obj["mail_bcc"],
             report_obj["mail_subject"],
            report_obj["mail_body"],
-           report_obj["type"]
+           report_obj["type"],
+           report_obj["logical_date"]
         )
         serialized_object = avro_serializer(report_model, SerializationContext(kafka_topic, MessageField.VALUE))
         return serialized_object

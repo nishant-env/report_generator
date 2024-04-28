@@ -46,13 +46,14 @@ def get_active_reports(session, schedule_type, schedule):
 
 
 ### sqlalchemy based approach for generating reports, this is quite memory intensive
-def generate_report_file(report_name, sql_query, db_datastore, create_zip_file, type='others'): 
+def generate_report_file(report_id,report_name, sql_query, db_datastore, create_zip_file, type='others', logical_date=str(datetime.today().date()-timedelta(days=1))): 
 
     try:
         engine = create_engine(db_connection(db_datastore))
 
     except Exception as e:
         logger.info("Error getting db engine", e)
+        update_last_error(report_id=report_id, error_message = f'{str(datetime.now())} - Error getting db connection')
         return None
     try:
         with engine.begin() as session:
@@ -63,18 +64,19 @@ def generate_report_file(report_name, sql_query, db_datastore, create_zip_file, 
             result = result_proxy.fetchall()
     except Exception as e:
         logger.exception(f'Report Generation failed for report {report_name}, reason: ', e)
+        update_last_error(report_id=report_id, error_message = f'{str(datetime.now())} - Sql Error')
         return None
     # Check if result is not empty
     if result:   
         result_df = pd.DataFrame(result, columns=columns)
         try:
-            csv_path = os.path.join(os.path.abspath(CSV_PATH), (type+'_'+str(datetime.today().date()-timedelta(days=1))))
+            csv_path = os.path.join(os.path.abspath(CSV_PATH), (type+'_'+str(logical_date)))
             create_folder(csv_path)
             if create_zip_file == True:
-                csv_path = os.path.join(os.path.abspath(csv_path), (report_name.replace(' ', '_').lower() + '_' + str(datetime.today().date()-timedelta(days=1)) + '.csv.xz'))
+                csv_path = os.path.join(os.path.abspath(csv_path), (report_name.replace(' ', '_').lower() + '_' + str(logical_date)) + '.csv.xz')
                 result_df.to_csv(csv_path, index=False, compression='xz')
             else:
-                csv_path = os.path.join(os.path.abspath(csv_path), (report_name.replace(' ', '_').lower() + '_' + str(datetime.today().date()-timedelta(days=1)) + '.csv'))
+                csv_path = os.path.join(os.path.abspath(csv_path), (report_name.replace(' ', '_').lower() + '_' + str(logical_date)) + '.csv')
                 result_df.to_csv(csv_path, index=False)
 
             logger.info(f'Generated file for report {report_name}, sending mail now')
@@ -82,9 +84,11 @@ def generate_report_file(report_name, sql_query, db_datastore, create_zip_file, 
         
         except Exception as e:
             logger.info("Error occurred:", e)
+            update_last_error(report_id=report_id, error_message = f'{str(datetime.now())} - Error generating csv file')
             return None
     else:
         logger.warning(f'Empty result for SQL query for report {report_name}, skipping email sending')
+        update_last_error(report_id=report_id, error_message = f'{str(datetime.now())} - Warning, no data')
         return None
     
 
@@ -119,3 +123,32 @@ def update_sent(report_id, report_name):
     
     except Exception as e:
         logger.exception(f'Error updating sent in metastore for report {report_name}', e)
+
+
+## updating time taken
+def update_time_taken(report_id, report_name, time_taken):
+    try:
+        set_query = update(
+                Reports
+        ).where(Reports.id == report_id).values(generation_time_seconds=time_taken)
+        logger.debug(set_query)
+        engine = get_metastore_engine()
+        with engine.begin() as session:
+            session.execute(set_query)
+    
+    except Exception as e:
+        logger.exception(f'Error updating time taken in metastore for report {report_name}', e)
+
+## update last error
+def update_last_error(report_id, error_message):
+    try:
+        set_query = update(
+                Reports
+        ).where(Reports.id == report_id).values(last_error=error_message)
+        logger.debug(set_query)
+        engine = get_metastore_engine()
+        with engine.begin() as session:
+            session.execute(set_query)
+    
+    except Exception as e:
+        logger.exception(f'Error updating last_error in metastore for report {report_id}', e)

@@ -14,6 +14,7 @@ avro_schema_str = dumps(
             {"name": "mail_bcc", "type": ["null","string"]},
             {"name": "mail_subject", "type": "string"},
             {"name": "mail_body", "type": "string"},
-            {"name": "type", "type": ["null", "string"], "default": None}
+            {"name": "type", "type": ["null", "string"], "default": None},
+            {"name": "logical_date", "type": ["null", "string"], "default": None}
           ]
         })

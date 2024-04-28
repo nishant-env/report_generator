@@ -1,4 +1,4 @@
-from .db_utils import get_active_reports, get_metastore_engine, generate_report_file, update_last_scheduled, update_sent
+from .db_utils import get_active_reports, get_metastore_engine, generate_report_file, update_last_scheduled, update_sent, update_time_taken, update_last_error
 from .avro_utils import avro_serialization_formatter, avro_deserialization_formatter
 from .configuration_utils import producer_conf , consumer_conf
 from .log_utils import logger

@@ -55,12 +55,12 @@ if __name__ == "__main__":
         current_year = nepali_datetime.date.today().year
         current_month = nepali_datetime.date.today().month
         days_in_current_month = nepali_datetime._days_in_month(current_year, current_month)
+        month_name = str(current_year)+'_'+nepali_datetime.date(current_year, current_month, 1).strftime('%B')
         if today_date == days_in_current_month:
             logger.info("Running for monthly report")
-            yesterday_date = (datetime.today() - timedelta(days=1)).strftime('%Y-%m-%d')
             from_date = str(nepali_datetime.date.today().to_datetime_date() - timedelta(days=days_in_current_month)) + ' 00:00:00'
             to_date = str(nepali_datetime.date.today().to_datetime_date() - timedelta(days=1)) + ' 23:59:59'
-            main('MONTHLY', 'DEFAULT_AMS', from_date, to_date, yesterday_date, 'monthly')
+            main('MONTHLY', 'DEFAULT_AMS', from_date, to_date, month_name, 'monthly')
 
         else:
             raise Exception('Not the last day of month')
@@ -74,12 +74,12 @@ if __name__ == "__main__":
         previous_month = 12 if previous_month == 0 else previous_month
         previous_year = current_year - 1 if previous_month == 12 else current_year
         days_in_previous_month = nepali_datetime._days_in_month(previous_year, previous_month)
+        month_name = str(previous_year)+'_'+ nepali_datetime.date(previous_year, previous_month, 1).strftime('%B')
         if today_date == 1:
             logger.info("Running for monthly report")
-            yesterday_date = (datetime.today() - timedelta(days=1)).strftime('%Y-%m-%d')
             from_date = str(nepali_datetime.date.today().to_datetime_date() - timedelta(days=days_in_previous_month)) + ' 00:00:00'
             to_date = str(nepali_datetime.date.today().to_datetime_date() - timedelta(days=1)) + ' 23:59:59'
-            main('MONTHLY', 'MONTH_FIRST_DAY', from_date, to_date, yesterday_date, 'monthly')
+            main('MONTHLY', 'MONTH_FIRST_DAY', from_date, to_date, month_name, 'monthly')
 
         else:
             raise Exception('Not the First day of month')

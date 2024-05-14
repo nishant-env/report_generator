@@ -91,10 +91,11 @@ def main():
                         if result == 1:
                             logger.info(f'Mail sent for report {report.report_name}, updating in metastore')
                             update_sent(report_id, report.report_name)
+                        else:
+                            update_last_error(report_id=report_id, error_message = f'{str(datetime.datetime.now())} - Error sending email')
                             
                     except Exception as e:
                         logger.exception(f'Error sending mail {report.report_name}: {e}')
-                        update_last_error(report_id=report_id, error_message = f'{str(datetime.datetime.now())} - Error sending email')
                 else:
                     logger.info('No file generated, skipping')
 

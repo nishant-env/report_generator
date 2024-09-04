@@ -11,10 +11,10 @@ config.read(config_file_path)
 
 ## kafka configs
 bootstrap_server = config.get('KAFKA','BOOTSTRAP_SERVER')
-kafka_topic = config.get('KAFKA', 'TOPIC_NAME')
-consumer_group = config.get('KAFKA','CONSUMER_GROUP')
-consumer_max_poll_timeout_ms = config.get('KAFKA', 'CONSUMER_MAX_TIMEOUT_MS')
-
+kafka_topic = config.get('KAFKA', 'TOPIC_NAME', fallback='esewa_ams')
+consumer_group = config.get('KAFKA','CONSUMER_GROUP_NAME', fallback='esewa_ams_consumers')
+consumer_max_poll_timeout_ms = config.get('KAFKA', 'CONSUMER_MAX_TIMEOUT_MS', fallback='36000000')
+kafka_topic_num_partitions = int(config.get('KAFKA', 'KAFKA_TOPIC_NUM_PARTITIONS', fallback='3'))
 
 ## schema registry config
 schema_registry_url = config.get('SCHEMAREGISRTY', 'SCHEMA_REGISTRY_URL')

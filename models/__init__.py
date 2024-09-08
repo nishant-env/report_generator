@@ -1,2 +1,2 @@
 from .models import Reports, MailProperties
-from .avro_schema import avro_schema_str
+from .avro_schemas import avro_schema_str, ReportModel

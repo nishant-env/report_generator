@@ -1,21 +1,27 @@
 from utils import logger
 from sqlalchemy.orm import Session
-from config import kafka_topic
-from utils import get_active_reports, send_report_to_queue, flush_producer, get_metastore_engine, update_last_error
+from config import kafka_topic, schema_registry_url
+from utils import get_active_reports, get_metastore_engine, update_last_error
+from utils.configuration_utils import producer_conf
+from utils.kafka_utils.kafka_util_producer import ProducerUtility
+from utils.serialization_utils.avro_utils import AvroUtil
 from datetime import datetime, timedelta
 import nepali_datetime
 import argparse
+from models import avro_schema_str, ReportModel
 
 def main(schedule, schedule_type, from_date, to_date, yesterday_date, type):
 
     logger.info("Producing user records to topic {}. ^C to exit.".format(kafka_topic))
     try:
         engine = get_metastore_engine()
+        avro_util = AvroUtil(schema_registry_url=schema_registry_url, avro_schema_str=avro_schema_str, kafka_topic=kafka_topic, serialization_model=ReportModel)
+        producer_util = ProducerUtility(producer_conf=producer_conf, serializer=avro_util.avro_serialization_formatter, deserializer=avro_util.avro_deserialization_formatter)
         with Session(engine) as session_metastore:
             reports_metadata = get_active_reports(session_metastore, schedule=schedule, schedule_type=schedule_type)
             if reports_metadata:
                 for report in reports_metadata: 
-                    report_key = str(report.report_id) + "-" + report.query_type
+                    report_key = str(report.report_id) + "-" + str(yesterday_date.replace('-',''))
                     modified_report = {
                         "report_name": str(report.report_name),
                         "sql_query" : str(report.sql_query).replace("#from_date#", from_date).replace('#to_date#', to_date).replace('#current_date#', str(nepali_datetime.date.today().to_datetime_date()) + ' 00:00:00'),
@@ -29,11 +35,11 @@ def main(schedule, schedule_type, from_date, to_date, yesterday_date, type):
                         "type": type,
                         "logical_date": str(yesterday_date)
                     }
-                    send_report_to_queue(report_key, modified_report)
+                    producer_util.send_report_to_queue(report_key, modified_report)
             else:
                 logger.info('No reports to send in queue, going to sleep for now')
     except KeyboardInterrupt:
-        flush_producer()
+        producer_util.flush_producer()
     except Exception as e:
        update_last_error(report_id=report_key.split('-')[0], error_message=f'{str(datetime.datetime.now())} - Error sending to queue')
        logger.exception("An error occurred: {}".format(str(e)))
@@ -92,8 +98,5 @@ if __name__ == "__main__":
         logger.info("Running for daily report")
         main('DAILY', 'DAILY_AMS', from_date, to_date, yesterday_date, 'daily')
 
-
-
-    flush_producer()
 
 

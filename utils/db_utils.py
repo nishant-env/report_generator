@@ -11,8 +11,6 @@ def get_metastore_engine():
     engine = create_engine(db_connection('DB_CONNECTION_METASTORE'))
     return engine
 
-
-
 def get_active_reports(session, schedule_type, schedule):
     try:
         fetch_query = select(
@@ -44,10 +42,8 @@ def get_active_reports(session, schedule_type, schedule):
         logger.exception(f'Error fetching active reports: {e}')
         return None
 
-
 ### sqlalchemy based approach for generating reports, this is quite memory intensive
 def generate_report_file(report_id,report_name, sql_query, db_datastore, create_zip_file, type='others', logical_date=str(datetime.today().date()-timedelta(days=1))): 
-
     try:
         engine = create_engine(db_connection(db_datastore))
 
@@ -64,7 +60,7 @@ def generate_report_file(report_id,report_name, sql_query, db_datastore, create_
             result = result_proxy.fetchall()
     except Exception as e:
         logger.exception(f'Report Generation failed for report {report_name}, reason: ', e)
-        update_last_error(report_id=report_id, error_message = f'{str(datetime.now())} - Sql Error')
+        update_last_error(report_id=report_id, error_message = f'{str(datetime.now())} - Sql Error, {str(e)}')
         return None
     # Check if result is not empty
     if result:   

@@ -1,13 +1,10 @@
 from json import loads
 from confluent_kafka import Producer
 from ..log_utils import logger
-from ..configuration_utils import producer_conf
 from ..db_utils import update_last_scheduled, update_last_error
-from ..avro_utils import avro_serialization_formatter, avro_deserialization_formatter
 from confluent_kafka.serialization import StringSerializer, StringDeserializer
 from config import kafka_topic, kafka_topic_num_partitions
 import datetime
-
 
 class ProducerUtility:
     def __init__(self, producer_conf: dict, serializer, deserializer):
@@ -18,7 +15,7 @@ class ProducerUtility:
         self.deserializer = deserializer
         self.counter_for_partition = 0
 
-    def getPartitionByKey(self, partitioner_flag: str) -> int:
+    def __getPartitionByKey(self, partitioner_flag: str) -> int:
         """
         We'll allocate a single partition for long running queries, while all other partitions will be used in round robin.
         This is chosen so that long running query won't interrupt other reports
@@ -33,15 +30,17 @@ class ProducerUtility:
                 self.counter_for_partition = 0
             return return_partition
 
-    def produced_callback(self, error, message):
+    def __produced_callback(self, error, message) -> None:
         try:
             if error is not None:
                 logger.exception(f'Error Occured for report {error.key()}')
             else:
-                logger.info(f'Report_id: {message.key()}, report_name: {self.deserializer(message.value()).report_name} successfully sent to queue on topic {message.topic()} at partition {message.partition()} at offset {message.offset()}')
-                ### setting the last scheduled time here 
+                report_id = self.decoder(message.key()).split('-')[0]
+                logger.info(f'Report_id: {report_id}, report_name: {self.deserializer(message.value()).report_name} successfully sent to queue on topic {message.topic()} at partition {message.partition()} at offset {message.offset()} with key {self.decoder(message.key())}')
+                # setting the last scheduled time here 
                 update_last_scheduled(
-                    report_id=message.key().decode('utf-8').split('-')[0])
+                    report_id=report_id
+                    )
         except Exception as e:
             logger.exception('Error in producer callback')
             logger.exception(e)   
@@ -55,8 +54,8 @@ class ProducerUtility:
                     topic=kafka_topic,
                     key=encoded_key,
                     value=serialized_value,
-                    partition=self.getPartitionByKey(partitioner_flag),
-                    callback=self.produced_callback
+                    partition=self.__getPartitionByKey(partitioner_flag),
+                    callback=self.__produced_callback
                 )
             else:
                 logger.info("Cannot send this message to queue")
